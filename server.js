@@ -2,12 +2,33 @@ const fs = require("fs");
 const path = require("path");
 const https = require("https");
 const express = require("express");
+const helmet = require("helmet");
 
 const PORT = 3000;
 
 const app = express();
 
-app.get("/secret", (req, res) => {
+app.use(helmet());
+
+function checkLoggedIn(req, res, next) {
+  const isLoggedIn = true; //TODO
+  if (isLoggedIn) {
+    return res.status(401).json({
+      error: "You must log in.",
+    });
+  }
+  next();
+}
+
+//log user in
+app.get("/auth/google", (req, res) => {});
+
+app.get("/auth/google/callback", (req, res) => {});
+
+//logout
+app.get("/auth/logout", (req, res) => {});
+
+app.get("/secret", checkLoggedIn, (req, res) => {
   return res.send("Your personal secret value is 222");
 });
 
@@ -16,10 +37,13 @@ app.get("/", (req, res) => {
 });
 
 https
-  .createServer({
-    key: fs.readFileSync("key.pem"),
-    cert: fs.readFileSync("cert.pem"),
-  }, app)
+  .createServer(
+    {
+      key: fs.readFileSync("key.pem"),
+      cert: fs.readFileSync("cert.pem"),
+    },
+    app
+  )
   .listen(PORT, () => {
     console.log(`Listening on port ${PORT}...`);
   });
